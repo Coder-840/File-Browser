@@ -1,41 +1,51 @@
-const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve uploaded files from /public
-app.use(express.static('public'));
-app.use(express.urlencoded({ extended: true }));
-
-// Multer setup for uploads up to 100 MB
+// Storage for uploaded files
 const upload = multer({
-    dest: 'public/',
-    limits: { fileSize: 100 * 1024 * 1024 } // 100 MB
+  dest: "uploads/",
+  limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
 });
 
-// Serve the frontend UI
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+// Serve static files
+app.use("/public", express.static(path.join(__dirname, "public")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Upload endpoint
-app.post('/upload', upload.single('file'), (req, res) => {
-    if (!req.file) return res.send('No file uploaded.');
+app.post("/upload", upload.single("file"), (req, res) => {
+  const tempPath = req.file.path;
+  const targetPath = path.join(__dirname, "uploads", req.file.originalname);
 
-    const originalName = req.file.originalname;
-    const newPath = path.join('public', originalName);
+  fs.rename(tempPath, targetPath, err => {
+    if (err) return res.status(500).send("File save failed.");
+    res.redirect(`/run/${encodeURIComponent(req.file.originalname)}`);
+  });
+});
 
-    fs.rename(req.file.path, newPath, err => {
-        if (err) return res.send('Error saving file.');
-        // Respond with the link to open in a new tab
-        res.send(`<script>
-            window.open('/${originalName}', '_blank');
-            window.location.href = '/';
-        </script>`);
-    });
+// Run HTML file
+app.get("/run/:filename", (req, res) => {
+  const filePath = path.join(__dirname, "uploads", req.params.filename);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send("File not found");
+  }
+});
+
+// Basic upload form
+app.get("/", (req, res) => {
+  res.send(`
+    <h2>Upload HTML File (Max 100MB)</h2>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".html" required />
+      <button type="submit">Upload & Run</button>
+    </form>
+  `);
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
