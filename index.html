@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HTML File Runner</title>
+<style>
+body { font-family: sans-serif; padding: 2rem; }
+h1 { margin-bottom: 1rem; }
+form { margin-top: 2rem; }
+input[type=file] { margin-bottom: 1rem; }
+button { padding: 0.5rem 1rem; font-size: 1rem; }
+</style>
+</head>
+<body>
+<h1>HTML File Runner</h1>
+<p>Select an HTML file from your files to run it in a new tab:</p>
+<form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".html" required />
+    <br>
+    <button type="submit">Upload & Run</button>
+</form>
+</body>
+</html>
