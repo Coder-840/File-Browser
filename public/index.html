@@ -1,61 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HTML File Runner</title>
-<style>
-body { font-family: sans-serif; padding: 2rem; }
-#drop-area { border: 2px dashed #ccc; padding: 2rem; text-align: center; margin-bottom: 1rem; transition: background 0.2s; }
-</style>
+  <meta charset="UTF-8" />
+  <title>HTML File Viewer</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f0f0f;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    form {
+      background: #1c1c1c;
+      padding: 2rem;
+      border-radius: 8px;
+    }
+    input, button {
+      width: 100%;
+      margin-top: 1rem;
+    }
+  </style>
 </head>
 <body>
-<h2>Upload and Run HTML File (Max 100MB)</h2>
+  <form id="uploadForm">
+    <h2>Open an HTML file</h2>
+    <input type="file" name="html" accept=".html" required />
+    <button type="submit">Open in new tab</button>
+  </form>
 
-<div id="drop-area">
-  Drag & Drop your HTML file here<br>or<br>
-  <input type="file" id="fileElem" accept=".html" />
-</div>
+  <script>
+    document.getElementById("uploadForm").onsubmit = async e => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
 
-<div id="progress"></div>
+      const res = await fetch("/upload", {
+        method: "POST",
+        body: formData
+      });
 
-<script>
-const dropArea = document.getElementById("drop-area");
-const fileElem = document.getElementById("fileElem");
-const progress = document.getElementById("progress");
-
-function uploadFile(file) {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const xhr = new XMLHttpRequest();
-  xhr.open("POST", "/upload", true);
-  xhr.responseType = "json";
-
-  xhr.upload.onprogress = e => {
-    if (e.lengthComputable) progress.textContent = `Uploading: ${Math.round((e.loaded / e.total) * 100)}%`;
-  };
-
-  xhr.onload = () => {
-    if (xhr.status === 200 && xhr.response && xhr.response.url) {
-      progress.textContent = "Upload complete!";
-      window.open(xhr.response.url, "_blank");
-    } else if (xhr.response && xhr.response.error) {
-      progress.textContent = `Upload failed: ${xhr.response.error}`;
-    } else {
-      progress.textContent = "Upload failed: unknown error";
-    }
-  };
-
-  xhr.onerror = () => progress.textContent = "Upload failed: network error";
-
-  xhr.send(formData);
-}
-
-dropArea.addEventListener("dragover", e => { e.preventDefault(); dropArea.style.background = "#f0f0f0"; });
-dropArea.addEventListener("dragleave", e => { e.preventDefault(); dropArea.style.background = ""; });
-dropArea.addEventListener("drop", e => { e.preventDefault(); dropArea.style.background = ""; if(e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]); });
-fileElem.addEventListener("change", e => { if(fileElem.files.length) uploadFile(fileElem.files[0]); });
-</script>
+      const data = await res.json();
+      window.open(data.url, "_blank");
+    };
+  </script>
 </body>
 </html>
