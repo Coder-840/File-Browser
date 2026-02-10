@@ -36,52 +36,37 @@ function uploadFile(file) {
 
   const xhr = new XMLHttpRequest();
   xhr.open("POST", "/upload", true);
-  xhr.responseType = "json";
+  xhr.responseType = "json"; // crucial!
 
   xhr.upload.onprogress = e => {
     if (e.lengthComputable) {
-      const percent = Math.round((e.loaded / e.total) * 100);
-      progress.textContent = `Uploading: ${percent}%`;
+      progress.textContent = `Uploading: ${Math.round((e.loaded / e.total) * 100)}%`;
     }
   };
 
   xhr.onload = () => {
     if (xhr.status === 200 && xhr.response && xhr.response.url) {
-      // Open uploaded HTML in a new tab
-      window.open(xhr.response.url, "_blank");
       progress.textContent = "Upload complete!";
+      // Open the uploaded HTML in a new tab
+      window.open(xhr.response.url, "_blank");
+    } else if (xhr.response && xhr.response.error) {
+      progress.textContent = `Upload failed: ${xhr.response.error}`;
     } else {
-      progress.textContent = "Upload failed.";
+      progress.textContent = "Upload failed: unknown error";
     }
   };
 
   xhr.onerror = () => {
-    progress.textContent = "Upload failed.";
+    progress.textContent = "Upload failed: network error";
   };
 
   xhr.send(formData);
 }
 
-dropArea.addEventListener("dragover", e => {
-  e.preventDefault();
-  dropArea.style.background = "#f0f0f0";
-});
-
-dropArea.addEventListener("dragleave", e => {
-  e.preventDefault();
-  dropArea.style.background = "";
-});
-
-dropArea.addEventListener("drop", e => {
-  e.preventDefault();
-  dropArea.style.background = "";
-  const files = e.dataTransfer.files;
-  if (files.length) uploadFile(files[0]);
-});
-
-fileElem.addEventListener("change", e => {
-  if (fileElem.files.length) uploadFile(fileElem.files[0]);
-});
+dropArea.addEventListener("dragover", e => { e.preventDefault(); dropArea.style.background = "#f0f0f0"; });
+dropArea.addEventListener("dragleave", e => { e.preventDefault(); dropArea.style.background = ""; });
+dropArea.addEventListener("drop", e => { e.preventDefault(); dropArea.style.background = ""; if(e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]); });
+fileElem.addEventListener("change", e => { if(fileElem.files.length) uploadFile(fileElem.files[0]); });
 </script>
 </body>
 </html>
