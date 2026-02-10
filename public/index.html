@@ -36,6 +36,7 @@ function uploadFile(file) {
 
   const xhr = new XMLHttpRequest();
   xhr.open("POST", "/upload", true);
+  xhr.responseType = "json";
 
   xhr.upload.onprogress = e => {
     if (e.lengthComputable) {
@@ -45,12 +46,17 @@ function uploadFile(file) {
   };
 
   xhr.onload = () => {
-    if (xhr.status === 200) {
-      const fileName = encodeURIComponent(file.name);
-      window.location.href = `/run/${fileName}`;
+    if (xhr.status === 200 && xhr.response && xhr.response.url) {
+      // Open uploaded HTML in a new tab
+      window.open(xhr.response.url, "_blank");
+      progress.textContent = "Upload complete!";
     } else {
       progress.textContent = "Upload failed.";
     }
+  };
+
+  xhr.onerror = () => {
+    progress.textContent = "Upload failed.";
   };
 
   xhr.send(formData);
