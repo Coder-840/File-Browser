@@ -6,33 +6,37 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Ensure uploads folder exists
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
+
 // Multer storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => cb(null, file.originalname)
+});
+
 const upload = multer({
-  dest: "uploads/",
+  storage,
   limits: { fileSize: 100 * 1024 * 1024 } // 100MB
 });
 
 app.use(express.static("public"));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(uploadsDir));
 
 // Upload endpoint
 app.post("/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
-  const tempPath = req.file.path;
-  const targetPath = path.join(__dirname, "uploads", req.file.originalname);
-
-  fs.rename(tempPath, targetPath, err => {
-    if (err) return res.status(500).json({ error: "File save failed" });
-
-    // Send back the URL of the uploaded file
-    res.json({ url: `/run/${encodeURIComponent(req.file.originalname)}` });
-  });
+  // Return the URL of the uploaded file
+  const url = `/uploads/${encodeURIComponent(req.file.originalname)}`;
+  res.json({ url });
 });
 
-// Serve uploaded HTML file
+// Serve the uploaded file (already handled by express.static("/uploads"))
+// Just a safety route in case we need /run/:filename
 app.get("/run/:filename", (req, res) => {
-  const filePath = path.join(__dirname, "uploads", req.params.filename);
+  const filePath = path.join(uploadsDir, req.params.filename);
   if (fs.existsSync(filePath)) {
     res.sendFile(filePath);
   } else {
