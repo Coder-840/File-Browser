@@ -1,4 +1,4 @@
-# HTML File Viewer (Railway-ready)
+# HTML File Viewer
 
 Upload any HTML file (up to 100 MB) and open it in a new tab with full JS support.
 
