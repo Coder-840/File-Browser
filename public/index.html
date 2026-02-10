@@ -6,13 +6,7 @@
 <title>HTML File Runner</title>
 <style>
 body { font-family: sans-serif; padding: 2rem; }
-#drop-area {
-  border: 2px dashed #ccc;
-  padding: 2rem;
-  text-align: center;
-  margin-bottom: 1rem;
-  transition: background 0.2s;
-}
+#drop-area { border: 2px dashed #ccc; padding: 2rem; text-align: center; margin-bottom: 1rem; transition: background 0.2s; }
 </style>
 </head>
 <body>
@@ -36,18 +30,15 @@ function uploadFile(file) {
 
   const xhr = new XMLHttpRequest();
   xhr.open("POST", "/upload", true);
-  xhr.responseType = "json"; // crucial!
+  xhr.responseType = "json";
 
   xhr.upload.onprogress = e => {
-    if (e.lengthComputable) {
-      progress.textContent = `Uploading: ${Math.round((e.loaded / e.total) * 100)}%`;
-    }
+    if (e.lengthComputable) progress.textContent = `Uploading: ${Math.round((e.loaded / e.total) * 100)}%`;
   };
 
   xhr.onload = () => {
     if (xhr.status === 200 && xhr.response && xhr.response.url) {
       progress.textContent = "Upload complete!";
-      // Open the uploaded HTML in a new tab
       window.open(xhr.response.url, "_blank");
     } else if (xhr.response && xhr.response.error) {
       progress.textContent = `Upload failed: ${xhr.response.error}`;
@@ -56,9 +47,7 @@ function uploadFile(file) {
     }
   };
 
-  xhr.onerror = () => {
-    progress.textContent = "Upload failed: network error";
-  };
+  xhr.onerror = () => progress.textContent = "Upload failed: network error";
 
   xhr.send(formData);
 }
